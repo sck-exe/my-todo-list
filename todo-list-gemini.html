@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lista de Tareas Cifrada</title>
+  <!-- Incluir CryptoJS desde CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js" integrity="sha512-a+SUDuwNzXDvz4XrIcXHuCf089/iJAoN4lmrXJg18XnduKK6YlDHNRalv4yd1N40OKI80tFidF+rqTFKGPoWFQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+:root {
+  --bg-color: #000000;
+  --text-color: #39FF14; /* Verde neón */
+}
+body {
+  font-family: 'Courier New', Courier, monospace;
+  margin: 0;
+  padding: 20px;
+  background-color: #000;
+  background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+  position: relative;
+  color: var(--text-color);
+}
+input, button, select, textarea {
+  font-family: inherit;
+  color: var(--text-color);
+}
+label {
+  color: var(--text-color);
+}
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 20px;
+  /* Se ha quitado el fondo para mantener un estilo minimalista */
+}
+/* Se eliminó el estilo para h1 ya que se reemplaza por una imagen */
+.add-task-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.add-task-form input[type="text"]{
+  flex-grow: 1;
+  --text-color: var(--bg-color);
+}
+.add-task-form input[type="date"] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 1em;
+  background-color: rgb(218, 220, 203);
+}
+.add-task-form input[type="text"] {
+  flex-grow: 1;
+  --text-color: var(--bg-color);
+}
+.add-task-form button {
+  padding: 10px 15px;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: opacity 0.2s ease;
+}
+.add-task-form button:hover {
+  opacity: 0.8;
+}
+#taskList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#taskList li {
+  background-color: transparent;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background-color 0.3s ease;
+  word-break: break-word;
+}
+#taskList li.completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+#taskList li .task-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+#taskList li input[type="checkbox"] {
+  cursor: pointer;
+  transform: scale(1.2);
+  margin-right: 5px;
+}
+#taskList li .due-date {
+  font-size: 0.8em;
+  margin-left: 15px;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+#taskList li .delete-btn {
+  background-color: transparent;
+  border: none;
+  color: #ff4d4d;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 0 5px;
+  font-weight: bold;
+  transition: color 0.2s;
+}
+#taskList li .delete-btn:hover {
+  color: #cc0000;
+}
+#customImageContainer {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 150px;
+  height: 150px;
+  border: 2px solid var(--text-color);
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+#customImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#imageUpload {
+  display: none;
+}
+/* Modal de Contraseña */
+#passwordOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  display: none;
+}
+#passwordModal {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  min-width: 300px;
+}
+#passwordModal h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-weight: normal;
+}
+#passwordModal label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+#passwordInput {
+  width: 80%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  font-size: 1em;
+}
+#passwordSubmit {
+  padding: 10px 20px;
+  font-size: 1em;
+  cursor: pointer;
+  background-color: var(--text-color);
+  color: var(--bg-color);
+  border: none;
+  border-radius: 4px;
+  transition: opacity 0.2s;
+}
+#passwordSubmit:hover {
+  opacity: 0.8;
+}
+#passwordError {
+  color: #ff4d4d;
+  margin-top: 15px;
+  font-size: 0.9em;
+  min-height: 1.2em;
+}
+/* Ocultar contenido principal inicialmente */
+.content-hidden {
+  visibility: hidden;
+  opacity: 0;
+}
+/* Estilos para el div de imagen del título */
+#titleImage {
+  text-align: center;
+  margin-bottom: 30px;
+}
+#titleImage img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Modificación para los campos de entrada */
+.add-task-form input[type="text"],
+.add-task-form input[type="date"],
+#passwordInput {
+  background-color: ivory; /* Color marfil para el fondo */
+  color: #000000; /* Color negro para el texto */
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 1em;
+  padding: 10px;
+}
+
+/* Sobrescribir cualquier estilo existente que pueda causar conflicto */
+.add-task-form input[type="text"] {
+  flex-grow: 1;
+  color: #000000 !important; /* Forzar color negro */
+  --text-color: #000000;
+}
+
+/* Asegurarnos que el fondo del input de fecha también es marfil */
+.add-task-form input[type="date"] {
+  background-color: ivory !important; /* Sobrescribir el color existente */
+  color: #000000;
+}
+
+/* Mantener el color verde neón para el resto de elementos de texto */
+body, label, #taskList li, #passwordTitle, #passwordForm label {
+  color: var(--text-color); /* Verde neón ya definido en :root */
+}
+  </style>
+</head>
+<body>
+  <!-- Modal de Contraseña -->
+  <div id="passwordOverlay">
+    <div id="passwordModal">
+      <h2 id="passwordTitle">Introduce la contraseña</h2>
+      <form id="passwordForm">
+        <label for="passwordInput">Contraseña:</label>
+        <input type="password" id="passwordInput" required />
+        <div id="passwordError"></div>
+        <button type="submit" id="passwordSubmit">Desbloquear</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Contenido Principal (inicialmente oculto) -->
+  <div class="container content-hidden" id="mainContent">
+    <!-- Div de imagen en lugar del título -->
+    <div id="titleImage">
+      <img src="title.png" alt="Título" width="200px" height="auto" />
+    </div>
+
+    <form class="add-task-form" id="addTaskForm" autocomplete="off">
+      <input type="text" id="taskInput" placeholder="Nueva tarea..." required />
+      <input type="date" id="dueDateInput" title="Fecha límite (opcional)" />
+      <button type="submit">Añadir</button>
+    </form>
+
+    <ul id="taskList">
+      <!-- Las tareas se añadirán aquí con JavaScript -->
+    </ul>
+  </div>
+
+  <div id="customImageContainer" class="content-hidden">
+    <img id="customImage" src="image.png" alt="Imagen personalizable" />
+  </div>
+
+  <script>
+    // --- Constantes de Cifrado ---
+    const SALT_KEY = 'tasksSalt';
+    const ENCRYPTED_TASKS_KEY = 'encryptedTasks';
+    const PBKDF2_ITERATIONS = 10000;
+    const KEY_SIZE_BITS = 256;
+
+    // Variable global para la clave derivada (en memoria)
+    let sessionKey = null;
+    let tasksData = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Referencias a elementos
+      const taskInput = document.getElementById('taskInput');
+      const dueDateInput = document.getElementById('dueDateInput');
+      const addTaskForm = document.getElementById('addTaskForm');
+      const taskList = document.getElementById('taskList');
+      const imageUpload = document.getElementById('imageUpload');
+      const customImage = document.getElementById('customImage');
+      const customImageContainer = document.getElementById('customImageContainer');
+      const mainContent = document.getElementById('mainContent');
+
+      // Referencias al modal de contraseña
+      const passwordOverlay = document.getElementById('passwordOverlay');
+      const passwordForm = document.getElementById('passwordForm');
+      const passwordInput = document.getElementById('passwordInput');
+      const passwordError = document.getElementById('passwordError');
+      const passwordTitle = document.getElementById('passwordTitle');
+      const passwordSubmit = document.getElementById('passwordSubmit');
+
+      // Inicialización
+      initApp();
+
+      function initApp() {
+        const storedSalt = localStorage.getItem(SALT_KEY);
+        const encryptedData = localStorage.getItem(ENCRYPTED_TASKS_KEY);
+
+        // Mostrar modal de contraseña
+        passwordOverlay.style.display = 'flex';
+
+        if (storedSalt && encryptedData) {
+          passwordTitle.textContent = 'Introduce la contraseña';
+          passwordSubmit.textContent = 'Desbloquear';
+        } else {
+          passwordTitle.textContent = 'Crea una contraseña para cifrar tus tareas';
+          passwordSubmit.textContent = 'Guardar y Empezar';
+          if (!storedSalt) {
+            const newSalt = CryptoJS.lib.WordArray.random(128 / 8).toString(CryptoJS.enc.Hex);
+            localStorage.setItem(SALT_KEY, newSalt);
+          }
+          if (!encryptedData) {
+            localStorage.removeItem(ENCRYPTED_TASKS_KEY);
+            tasksData = [];
+          }
+        }
+        passwordForm.onsubmit = handlePasswordSubmit;
+      }
+
+      function handlePasswordSubmit(e) {
+        e.preventDefault();
+        const password = passwordInput.value;
+        const salt = localStorage.getItem(SALT_KEY);
+        passwordError.textContent = '';
+
+        if (!password) {
+          passwordError.textContent = 'La contraseña no puede estar vacía.';
+          return;
+        }
+        if (!salt) {
+          passwordError.textContent = 'Error crítico: Falta la sal de cifrado.';
+          return;
+        }
+
+        sessionKey = deriveKey(password, salt);
+        const encryptedData = localStorage.getItem(ENCRYPTED_TASKS_KEY);
+
+        if (encryptedData) {
+          const decryptedJson = decryptData(encryptedData, sessionKey);
+          if (decryptedJson !== null) {
+            try {
+              tasksData = JSON.parse(decryptedJson);
+              if (!Array.isArray(tasksData)) throw new Error("Datos corruptos.");
+              unlockApp();
+            } catch (error) {
+              passwordError.textContent = 'Error: Datos corruptos.';
+              sessionKey = null;
+              passwordInput.value = '';
+            }
+          } else {
+            passwordError.textContent = 'Contraseña incorrecta o datos corruptos.';
+            sessionKey = null;
+            passwordInput.value = '';
+          }
+        } else {
+          tasksData = [];
+          unlockApp();
+          saveTasks();
+        }
+      }
+
+      function unlockApp() {
+        passwordOverlay.style.display = 'none';
+        passwordInput.value = '';
+        mainContent.classList.remove('content-hidden');
+        customImageContainer.classList.remove('content-hidden');
+        renderTasks();
+        addTaskForm.addEventListener('submit', handleAddTask);
+        taskList.addEventListener('click', handleTaskListClick);
+      }
+
+      function handleAddTask(e) {
+        e.preventDefault();
+        const taskText = taskInput.value.trim();
+        const dueDate = dueDateInput.value;
+        if (!taskText) return;
+
+        tasksData.push({
+          text: taskText,
+          dueDate: dueDate || '',
+          completed: false,
+          id: Date.now()
+        });
+
+        renderTasks();
+        saveTasks();
+        taskInput.value = '';
+        dueDateInput.value = '';
+      }
+
+      function handleTaskListClick(e) {
+        const target = e.target;
+        const li = target.closest('li');
+        if (!li) return;
+        const taskId = parseInt(li.dataset.taskId, 10);
+
+        if (target.type === 'checkbox') {
+          const taskIndex = tasksData.findIndex(task => task.id === taskId);
+          if (taskIndex > -1) {
+            tasksData[taskIndex].completed = target.checked;
+            li.classList.toggle('completed', target.checked);
+            saveTasks();
+          }
+        }
+
+        if (target.classList.contains('delete-btn')) {
+          tasksData = tasksData.filter(task => task.id !== taskId);
+          li.remove();
+          saveTasks();
+        }
+      }
+
+      // --- Funciones de Cifrado ---
+      function deriveKey(password, salt) {
+        return CryptoJS.PBKDF2(password, CryptoJS.enc.Hex.parse(salt), {
+          keySize: KEY_SIZE_BITS / 32,
+          iterations: PBKDF2_ITERATIONS,
+          hasher: CryptoJS.algo.SHA256
+        });
+      }
+
+      function encryptData(plaintext, key) {
+        if (!key) return null;
+        try {
+          const iv = CryptoJS.lib.WordArray.random(128 / 8);
+          const encrypted = CryptoJS.AES.encrypt(plaintext, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+          });
+          const ivBase64 = CryptoJS.enc.Base64.stringify(iv);
+          return ivBase64 + ':' + encrypted.toString();
+        } catch (error) {
+          console.error("Error durante el cifrado:", error);
+          return null;
+        }
+      }
+
+      function decryptData(ciphertextWithIv, key) {
+        if (!key) return null;
+        try {
+          const parts = ciphertextWithIv.split(':');
+          if (parts.length !== 2) return null;
+          const iv = CryptoJS.enc.Base64.parse(parts[0]);
+          const ciphertext = parts[1];
+          const decrypted = CryptoJS.AES.decrypt(ciphertext, key, {
+            iv: iv,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7
+          });
+          const plaintext = decrypted.toString(CryptoJS.enc.Utf8);
+          return (plaintext === '' && ciphertext.length > 0) ? null : plaintext;
+        } catch (error) {
+          console.error("Error durante el descifrado:", error);
+          return null;
+        }
+      }
+
+      // --- Persistencia ---
+      function saveTasks() {
+        if (!sessionKey) return;
+        const tasksJson = JSON.stringify(tasksData);
+        const encryptedTasks = encryptData(tasksJson, sessionKey);
+        if (encryptedTasks) {
+          localStorage.setItem(ENCRYPTED_TASKS_KEY, encryptedTasks);
+        } else {
+          alert("Error: No se pudieron guardar los cambios de forma segura.");
+        }
+      }
+
+      function renderTasks() {
+        taskList.innerHTML = '';
+        if (!Array.isArray(tasksData)) {
+          tasksData = [];
+        }
+        tasksData.forEach(task => renderSingleTask(task));
+      }
+
+      function renderSingleTask(task) {
+        const li = document.createElement('li');
+        li.dataset.taskId = task.id;
+        if (task.completed) li.classList.add('completed');
+
+        const taskContent = document.createElement('div');
+        taskContent.classList.add('task-content');
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = task.completed;
+        taskContent.appendChild(checkbox);
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = task.text;
+        taskContent.appendChild(textSpan);
+
+        if (task.dueDate) {
+          const dateSpan = document.createElement('span');
+          dateSpan.classList.add('due-date');
+          dateSpan.textContent = `(${formatDate(task.dueDate)})`;
+          taskContent.appendChild(dateSpan);
+        }
+
+        li.appendChild(taskContent);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.classList.add('delete-btn');
+        deleteBtn.innerHTML = '×';
+        deleteBtn.title = 'Eliminar tarea';
+        li.appendChild(deleteBtn);
+
+        taskList.appendChild(li);
+      }
+
+      // --- Funciones de Utilidad ---
+      function formatDate(dateString) {
+        if (!dateString) return '';
+        try {
+          const date = new Date(dateString + 'T00:00:00');
+          const day = String(date.getDate()).padStart(2, '0');
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        } catch (e) {
+          return dateString;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
