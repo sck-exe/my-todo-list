@@ -1,0 +1,391 @@
+:root {
+    --bg-color: #000000;
+    --text-color: #39FF14; /* Verde neón */
+    --priority-color: #FF4136; /* Rojo */
+    --button-bg: var(--text-color);
+    --button-text: var(--bg-color);
+    --input-bg: ivory;
+    --input-text: #000000;
+    --modal-bg: #1a1a1a; /* Fondo ligeramente más claro para modales */
+    --border-color: #444;
+    --delete-color: #ff4d4d; /* Rojo claro para eliminar */
+    --delete-hover-color: #cc0000; /* Rojo oscuro hover */
+    --restore-color: var(--text-color); /* Verde neón para restaurar */
+  }
+  body {
+    font-family: 'Courier New', Courier, monospace;
+    margin: 0;
+    padding: 20px;
+    background-color: var(--bg-color);
+    background-image: url("https://www.transparenttextures.com/patterns/stardust.png");
+    transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+    position: relative;
+    color: var(--text-color);
+  }
+  input, button, select, textarea {
+    font-family: inherit;
+    color: var(--text-color); /* Color por defecto */
+    border-radius: 3px;
+    border: 1px solid var(--border-color);
+  }
+  label {
+    color: var(--text-color);
+  }
+  .container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 20px;
+    position: relative; /* Asegura que tenga un contexto de apilamiento */
+    z-index: 1; /* Mayor que el -1 del fondo */
+}
+  .add-task-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .add-task-form input[type="text"]{
+    flex-grow: 1;
+    background-color: var(--input-bg);
+    color: var(--input-text) !important; /* Forzar color */
+    padding: 10px;
+    font-size: 1em;
+  }
+  .add-task-form input[type="date"] {
+    padding: 10px;
+    font-size: 1em;
+    background-color: var(--input-bg) !important; /* Sobrescribir */
+    color: var(--input-text) !important; /* Forzar color */
+    min-width: 130px; /* Asegurar espacio para el selector de fecha */
+  }
+  .add-task-form button,
+  .action-button { /* Estilo común para botones de acción */
+    padding: 10px 15px;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    transition: opacity 0.2s ease;
+    white-space: nowrap; /* Evitar que el texto del botón se parta */
+  }
+  .add-task-form button:hover,
+  .action-button:hover {
+    opacity: 0.8;
+  }
+  #taskList, #deletedTaskList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  #taskList li, #deletedTaskList li {
+    background-color: transparent;
+    padding: 10px 15px; /* Reducido ligeramente */
+    margin-bottom: 10px;
+    border-radius: 3px;
+    border: 1px solid var(--border-color); /* Borde sutil */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background-color 0.3s ease;
+    word-break: break-word;
+    color: var(--text-color); /* Asegurar color de texto */
+    gap: 10px; /* Espacio entre contenido y acciones */
+  }
+  #taskList li.completed {
+    opacity: 0.6;
+    text-decoration: line-through;
+  }
+   #taskList li.completed .task-content span {
+      text-decoration: line-through; /* Asegurar tachado del texto */
+   }
+
+  /* Contenido de la tarea (checkbox, icono, texto, fecha) */
+  .task-content { /* Aplica a ambas listas */
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espacio reducido */
+    flex-grow: 1;
+    margin-right: 10px; /* Espacio antes de los botones de acción */
+    overflow: hidden; /* Evitar que el texto largo desborde */
+  }
+   .task-content span { /* Texto de la tarea */
+      flex-shrink: 1; /* Permitir que el texto se encoja */
+      min-width: 0; /* Necesario para que text-overflow funcione */
+      white-space: nowrap; /* Evitar saltos de línea */
+      overflow: hidden;
+      text-overflow: ellipsis; /* Añadir puntos suspensivos si es muy largo */
+   }
+
+  #taskList li input[type="checkbox"] {
+    cursor: pointer;
+    transform: scale(1.2);
+    margin-right: 5px;
+    /* Estilo del checkbox para que contraste */
+    accent-color: var(--text-color);
+    flex-shrink: 0; /* Evitar que el checkbox se encoja */
+  }
+  .priority-icon { /* Aplica a ambas listas */
+    color: var(--priority-color);
+    font-weight: bold;
+    font-size: 1.2em;
+    display: none; /* Oculto por defecto */
+    flex-shrink: 0; /* Evitar que el icono se encoja */
+  }
+   li.is-priority .priority-icon {
+      display: inline; /* Mostrar si es prioritario */
+  }
+  .due-date { /* Aplica a ambas listas */
+    font-size: 0.8em;
+    margin-left: 10px; /* Espacio reducido */
+    opacity: 0.8;
+    white-space: nowrap;
+    flex-shrink: 0; /* Evitar que la fecha se encoja */
+  }
+  .deleted-info { /* Específico para papelera */
+      font-size: 0.75em;
+      opacity: 0.6;
+      margin-left: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+  }
+
+   /* Contenedor de botones de acción */
+  .task-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px; /* Espacio entre botones */
+      flex-shrink: 0; /* Evitar que los botones se encojan */
+  }
+
+   /* Botones dentro de las listas */
+  .task-actions button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2em; /* Tamaño base */
+    padding: 0 4px; /* Espacio reducido */
+    transition: color 0.2s, transform 0.2s;
+    line-height: 1; /* Ajustar altura */
+  }
+  .task-actions button:hover {
+      transform: scale(1.15); /* Aumentar tamaño al pasar el ratón */
+  }
+  .priority-btn {
+    color: #cccccc; /* Gris claro para no prioritario */
+    font-weight: bold;
+    font-size: 1.3em; /* Ligeramente más grande */
+  }
+  .priority-btn.active {
+    color: var(--priority-color); /* Rojo si es prioritario */
+  }
+  .delete-btn {
+    color: var(--delete-color);
+    font-weight: bold;
+  }
+  .delete-btn:hover {
+    color: var(--delete-hover-color);
+  }
+  .restore-btn {
+      color: var(--restore-color);
+      font-size: 1.4em; /* Icono un poco más grande */
+  }
+  .restore-btn:hover {
+      color: white; /* Blanco al pasar el ratón */
+  }
+  .perm-delete-btn {
+      color: var(--delete-color);
+      font-size: 1.2em;
+  }
+   .perm-delete-btn:hover {
+      color: var(--delete-hover-color);
+   }
+
+  #customImageContainer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 150px;
+    height: 150px;
+    border: 2px solid var(--text-color);
+    border-radius: 5px;
+    overflow: hidden;
+    background-color: rgba(255, 255, 255, 0.1); /* Más sutil */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  }
+  #customImage {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  #imageUpload {
+    display: none;
+  }
+
+  /* Modales (Contraseña y Papelera) */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Correcto, encima de todo */
+    display: none; /* Oculto por defecto */
+    padding: 20px;
+    box-sizing: border-box;
+}
+  .modal-content {
+    background-color: var(--modal-bg);
+    color: var(--text-color);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    min-width: 300px;
+    width: 90%; /* Ancho relativo */
+    max-width: 700px; /* Ancho máximo */
+    max-height: 90vh;
+    display: flex; /* Usar flexbox para la estructura interna */
+    flex-direction: column; /* Apilar elementos verticalmente */
+    position: relative; /* Para el botón de cierre */
+  }
+   .modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: normal;
+    flex-shrink: 0; /* Evitar que el título se encoja */
+  }
+  /* Contenedor de la lista dentro del modal de papelera */
+   .modal-list-container {
+      overflow-y: auto; /* Hacer la lista desplazable */
+      margin-bottom: 20px; /* Espacio antes de botones inferiores si los hubiera */
+      flex-grow: 1; /* Permitir que ocupe el espacio disponible */
+      border-top: 1px solid var(--border-color); /* Separador superior */
+      border-bottom: 1px solid var(--border-color); /* Separador inferior */
+      padding: 15px 0; /* Espacio interno */
+   }
+   #deletedTaskList {
+      padding: 0 10px; /* Padding lateral dentro del scroll */
+   }
+
+  .modal-content label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+  }
+  .modal-content input[type="password"] { /* Solo para modal contraseña */
+    width: 80%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1em;
+    background-color: var(--input-bg);
+    color: var(--input-text);
+  }
+  /* Botones del Modal (Submit Contraseña, Cerrar) */
+  .modal-content button[type="submit"], /* Solo para modal contraseña */
+  .modal-close-btn {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    border: none;
+    border-radius: 4px;
+    transition: opacity 0.2s;
+    margin-top: 10px; /* Espacio arriba */
+    flex-shrink: 0; /* Evitar que se encojan */
+  }
+  .modal-content button[type="submit"]:hover,
+  .modal-close-btn:hover {
+    opacity: 0.8;
+  }
+  .modal-close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: transparent;
+      color: var(--text-color);
+      font-size: 1.8em; /* Más grande */
+      padding: 0px 8px; /* Ajuste padding */
+      line-height: 1;
+      border: none; /* Quitar borde */
+  }
+   .modal-close-btn:hover {
+      color: var(--priority-color);
+      opacity: 1;
+      transform: scale(1.1); /* Efecto hover */
+   }
+  #passwordError {
+    color: var(--priority-color); /* Rojo para errores */
+    margin-top: 15px;
+    font-size: 0.9em;
+    min-height: 1.2em;
+    flex-shrink: 0; /* Evitar que se encoja */
+  }
+  #emptyTrashMessage {
+      font-style: italic;
+      opacity: 0.7;
+      padding: 20px;
+  }
+  /* Ocultar contenido principal inicialmente */
+  .content-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.3s, opacity 0.3s ease; /* Transición suave */
+  }
+  /* Estilos para el div de imagen del título */
+  #titleImage {
+    text-align: center;
+    margin-bottom: 35px;
+    filter: drop-shadow(0 0 5px var(--text-color)); /* Sombra verde a las imágenes */
+  
+    /* --- NUEVAS LÍNEAS --- */
+    position: relative; /* Establece un contexto de posicionamiento */
+    z-index: 1;         /* Asegura que esté apilado DENTRO del .container (que ya es z-index: 1) */
+                        /* Podría funcionar con z-index: 0 o auto también, pero 1 es explícito */
+    /* --------------------- */
+  }
+  #titleImage img {
+    max-width: 100%;
+    height: auto;
+    /* Mantenemos el filter aquí o lo quitamos si la sombra en el div es suficiente */
+    /* filter: drop-shadow(0 0 5px var(--text-color)); */
+  }
+  #titleImage img[alt="polarBear"] {
+      width: 80px;
+      margin-top: -15px;
+      filter: none; /* Sin filtro para el oso */
+  }
+
+  /* Botón de Papelera */
+  #trashActions {
+      margin-bottom: 20px;
+      text-align: right; /* Alinear botón a la derecha */
+  }
+   #showTrashBtn {
+      /* Usa el estilo .action-button definido antes */
+      font-size: 0.9em;
+   }
+   #trashCount {
+      font-weight: bold;
+      margin-left: 3px;
+   }
+
+   #threejs-background {
+    position: fixed; /* Fija el fondo para que cubra toda la ventana */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Coloca el fondo detrás de todo */
+}
